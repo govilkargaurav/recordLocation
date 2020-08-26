@@ -61,7 +61,8 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 override fun onFailure(call: Call<LocationModel>, t: Throwable) {
-                    Log.e("ERROR",t.message)
+                    RLtextView.text = "Something went wrong, Please try again"
+                    RLtextView.isVisible = true
                 }
             })
     }
@@ -79,7 +80,6 @@ class MainActivity : AppCompatActivity() {
             .withListener(object : PermissionListener, MultiplePermissionsListener {
                 override fun onPermissionGranted(p0: PermissionGrantedResponse?) {
                     Toast.makeText(applicationContext,"Granted Permission", Toast.LENGTH_LONG)
-
                 }
 
                 override fun onPermissionDenied(p0: PermissionDeniedResponse?) {
@@ -160,7 +160,8 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 override fun onFailure(call: Call<User>, t: Throwable) {
-                    Log.e("ERROR",t.message)
+                    RLtextView.text = "Something went wrong, Please try again"
+                    RLtextView.isVisible = true
                 }
             })
     }

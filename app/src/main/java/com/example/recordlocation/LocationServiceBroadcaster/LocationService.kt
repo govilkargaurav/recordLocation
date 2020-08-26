@@ -26,12 +26,9 @@ class LocationService : BroadcastReceiver() {
                     if (result != null){
                         val location = result.lastLocation
                         val locationString = StringBuilder(location.latitude.toString()).append("/").append(location.latitude.toString())
-                        val locParam = LocationModel(
-                            location.latitude.toString(),
-                            location.latitude.toString()
-                        )
+
                         try {
-                            MainActivity.getInstance()?.updateLocation(locParam)
+                            MainActivity.getInstance()?.updateLocation(location.latitude.toString(),location.longitude.toString())
                         }catch (e : Exception){
                             Toast.makeText(context,locationString,Toast.LENGTH_LONG).show()
                         }

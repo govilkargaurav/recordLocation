@@ -6,15 +6,15 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.view.isVisible
 import com.example.recordlocation.LocationServiceBroadcaster.LocationService
 import com.example.recordlocation.Model.LocationModel
+import com.example.recordlocation.Model.LocationResponseModel
 import com.example.recordlocation.Model.LoginRequest
 import com.example.recordlocation.Model.User
 import com.example.recordlocation.RetrofitSingleton.APISingletonObject
@@ -30,12 +30,15 @@ import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
 import com.karumi.dexter.listener.single.PermissionListener
 import kotlinx.android.synthetic.main.activity_main.*
-import retrofit2.*
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class MainActivity : AppCompatActivity() {
     private var locationManager : LocationManager? = null
     lateinit var locationRequest : LocationRequest
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient
+    private var userObj : User? = null
 
 
     companion object{
@@ -46,25 +49,36 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    fun updateLocation(value: LocationModel){
+    fun updateLocation(valueLat : String, valueLong : String){
         this@MainActivity.runOnUiThread{
-            RLtextView.text = value.strlatitude.toString()
+            RLtextView.text = valueLat.toString()
             RLtextView.isVisible = true
 
         }
 
-        APISingletonObject.instance.recorduserLocation(value)
-            .enqueue(object : Callback<LocationModel> {
-                override fun onResponse(call: Call<LocationModel>, response: Response<LocationModel>) {
-                    RLtextView.text = response.body()?.strlatitude ?: String()
-                    RLtextView.isVisible = true
-                }
+        if (userObj==null){
+            return
+        }
+        val locParam = LocationModel(
+            userObj!!.userName,
+            userObj!!.userId,
+            valueLat,
+            valueLong
+        )
 
-                override fun onFailure(call: Call<LocationModel>, t: Throwable) {
-                    RLtextView.text = "Something went wrong, Please try again"
-                    RLtextView.isVisible = true
-                }
-            })
+                APISingletonObject.instance.recorduserLocation(locParam)
+                .enqueue(object : Callback<LocationResponseModel> {
+                    override fun onResponse(call: Call<LocationResponseModel>, response: Response<LocationResponseModel>) {
+                        RLtextView.text = response.body()?.status ?: String()
+                        RLtextView.isVisible = true
+
+                        locationTxtView.text = "Sending your co-ordinates to server    " + valueLat.toString() + " " + valueLong.toString()
+                    }
+                    override fun onFailure(call: Call<LocationResponseModel>, t: Throwable) {
+                        RLtextView.text = "Something went wrong, Please try again"
+                        RLtextView.isVisible = true
+                    }
+                })
     }
 
 
@@ -79,11 +93,15 @@ class MainActivity : AppCompatActivity() {
             .withPermissions(Manifest.permission.ACCESS_FINE_LOCATION)
             .withListener(object : PermissionListener, MultiplePermissionsListener {
                 override fun onPermissionGranted(p0: PermissionGrantedResponse?) {
-                    Toast.makeText(applicationContext,"Granted Permission", Toast.LENGTH_LONG)
+                    Toast.makeText(applicationContext, "Granted Permission", Toast.LENGTH_LONG)
                 }
 
                 override fun onPermissionDenied(p0: PermissionDeniedResponse?) {
-                    Toast.makeText(applicationContext,"You must accept this permission in order to record your location", Toast.LENGTH_LONG)
+                    Toast.makeText(
+                        applicationContext,
+                        "You must accept this permission in order to record your location",
+                        Toast.LENGTH_LONG
+                    )
                 }
 
                 override fun onPermissionRationaleShouldBeShown(
@@ -91,8 +109,9 @@ class MainActivity : AppCompatActivity() {
                     p1: PermissionToken?
                 ) {
                 }
+
                 override fun onPermissionsChecked(p0: MultiplePermissionsReport?) {
-                    Toast.makeText(applicationContext,"Granted Permission", Toast.LENGTH_LONG)
+                    Toast.makeText(applicationContext, "Granted Permission", Toast.LENGTH_LONG)
                     updateLocation()
                 }
 
@@ -100,11 +119,10 @@ class MainActivity : AppCompatActivity() {
                     p0: MutableList<PermissionRequest>?,
                     p1: PermissionToken?
                 ) {
-                    Toast.makeText(applicationContext,"Denied Permission", Toast.LENGTH_LONG)
+                    Toast.makeText(applicationContext, "Denied Permission", Toast.LENGTH_LONG)
                 }
 
             }).check()
-
 
     }
 
@@ -128,13 +146,18 @@ class MainActivity : AppCompatActivity() {
             // for ActivityCompat#requestPermissions for more details.
             return
         }
-        fusedLocationProviderClient.requestLocationUpdates(locationRequest,getPendingIntent())
+        fusedLocationProviderClient.requestLocationUpdates(locationRequest, getPendingIntent())
     }
 
     private fun getPendingIntent(): PendingIntent? {
-        val intent = Intent(this@MainActivity,LocationService::class.java)
+        val intent = Intent(this@MainActivity, LocationService::class.java)
         intent.setAction(LocationService.ACTION_UPDATE_PROCESS)
-        return PendingIntent.getBroadcast(this@MainActivity,0,intent,PendingIntent.FLAG_UPDATE_CURRENT)
+        return PendingIntent.getBroadcast(
+            this@MainActivity,
+            0,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT
+        )
     }
 
     private fun buildLocationRequest(){
@@ -152,15 +175,24 @@ class MainActivity : AppCompatActivity() {
             editTextTextPassword2.text.toString()
         )
 
-        APISingletonObject.instance.getLoggedinUser(requestParam)
-            .enqueue(object : Callback<User> {
-                override fun onResponse(call: Call<User>, response: Response<User>) {
-                    RLtextView.text = response.body()?.username ?: String()
-                    RLtextView.isVisible = true
-                }
+
+
+                APISingletonObject.instance.getLoggedinUser(requestParam)
+                .enqueue(object : Callback<User> {
+                    override fun onResponse(call: Call<User>, response: Response<User>) {
+                        if (response.body()!=null) {
+                            userObj = response.body()
+                        }
+                        RLtextView.text = response.body()?.userName ?: String()
+                        RLtextView.isVisible = true
+
+                        editTextTextPersonName.isVisible = false
+                        editTextTextPassword2.isVisible = false
+                        btnLogin.isVisible = false
+                    }
 
                 override fun onFailure(call: Call<User>, t: Throwable) {
-                    RLtextView.text = "Something went wrong, Please try again"
+                    RLtextView.text = "Something went wrong in Login, Please try again"
                     RLtextView.isVisible = true
                 }
             })

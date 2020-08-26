@@ -2,27 +2,23 @@ package com.example.recordlocation.Model
 import com.google.gson.annotations.SerializedName
 
 class User(
-
-    val code : Int,
-    val message : String,
-    val token : String,
-    val username : String,
-    @SerializedName("user_id") val userId: String
+    val login : Boolean,
+    val userId : Int,
+    val userName : String
 )
 
 class LoginRequest(
-    val email : String,
-    val password : String
+    val userName : String,
+    val userPassword : String
 )
 
 class LocationModel(
-    val strlatitude : String,
-    val strlongitude : String
-
-
+    var userName : String,
+    var userId : Int,
+    val lat : String,
+    val lng : String
 )
 
 class LocationResponseModel (
-    val strcode : Int,
-    val strresponse : String
+    val status : String
 )

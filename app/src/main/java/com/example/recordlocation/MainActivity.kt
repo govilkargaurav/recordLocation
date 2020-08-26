@@ -90,7 +90,10 @@ class MainActivity : AppCompatActivity() {
         instanse = this
 
         Dexter.withContext(this)
-            .withPermissions(Manifest.permission.ACCESS_FINE_LOCATION)
+            .withPermissions(Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                )
             .withListener(object : PermissionListener, MultiplePermissionsListener {
                 override fun onPermissionGranted(p0: PermissionGrantedResponse?) {
                     Toast.makeText(applicationContext, "Granted Permission", Toast.LENGTH_LONG)
@@ -174,9 +177,6 @@ class MainActivity : AppCompatActivity() {
             editTextTextPersonName.text.toString(),
             editTextTextPassword2.text.toString()
         )
-
-
-
                 APISingletonObject.instance.getLoggedinUser(requestParam)
                 .enqueue(object : Callback<User> {
                     override fun onResponse(call: Call<User>, response: Response<User>) {

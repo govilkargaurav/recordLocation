@@ -8,7 +8,7 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
-
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
         android:allowBackup="true"
@@ -18,8 +18,14 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
-        <receiver
-            android:name=".LocationServiceBroadcaster.LocationService" />
+        <service
+            android:name=".Utility.BGLocationService"
+            android:foregroundServiceType="location"
+            android:enabled="true"
+            android:exported="true"></service>
+
+
+<!--        <receiver android:name=".LocationServiceBroadcaster.LocationService" />-->
 
         <activity android:name=".MainActivity">
             <intent-filter>
